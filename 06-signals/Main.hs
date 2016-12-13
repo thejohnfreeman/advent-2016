@@ -4,16 +4,16 @@ import qualified Data.Map.Strict as Map
 import Data.List (foldl', maximumBy, transpose)
 import Data.Function (on)
 
-type CharCounts = Map.Map Char Integer
+type Counts k = Map.Map k Integer
 
 -- Count characters in a single list
-count1 :: [Char] -> CharCounts
+count1 :: Ord k => [k] -> Counts k
 count1 = foldl' f Map.empty
   where f map c = Map.insertWithKey (const (+)) c 1 map
 
 -- Count characters in each column of a list of lines
-count :: [[Char]] -> [CharCounts]
-count = map count1 . transpose
+countByColumn :: Ord k => [[k]] -> [Counts k]
+countByColumn = map count1 . transpose
 
 opposite :: Ordering -> Ordering
 opposite LT = GT
@@ -28,7 +28,8 @@ g .$ f = \a b -> g $ f a b
 maximumKeyBy :: (a -> a -> Ordering) -> Map.Map k a -> k
 maximumKeyBy compare' = fst . maximumBy (compare' `on` snd) . Map.toList
 
+main :: IO ()
 main = do
-  counts <- count . lines <$> getContents
-  putStrLn $ map (maximumKeyBy compare) $ counts
-  putStrLn $ map (maximumKeyBy $ opposite .$ compare) $ counts
+  counts <- countByColumn . lines <$> getContents
+  putStrLn $ map (maximumKeyBy compare) counts
+  putStrLn $ map (maximumKeyBy $ opposite .$ compare) counts
